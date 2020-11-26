@@ -4,11 +4,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using WebApiGraphBigBrain.Interfaces;
 using WebApiGraphBigBrain.models;
 
 namespace WebApiGraphBigBrain.Services
 {
-    public class BigGraphClient
+    public class GraphService : IGraphService
     {
         private static GraphServiceClient graphClient;
         private static IConfiguration configuration;
@@ -21,7 +22,7 @@ namespace WebApiGraphBigBrain.Services
         private static string endPoint;
         private static string authority;
 
-        static BigGraphClient()
+        static GraphService()
         {
             configuration = new ConfigurationBuilder()
                 .SetBasePath(System.IO.Directory.GetCurrentDirectory())
@@ -46,7 +47,7 @@ namespace WebApiGraphBigBrain.Services
             authority = $"{instance}{tenantId}";
         }
 
-        public static async Task<GraphServiceClient> GetGraphServiceClient()
+        public async Task<IGraphServiceClient> GetGraphServiceClient()
         {
             var delegateAuthProvider = await GetAuthProvider();
             graphClient = new GraphServiceClient(endPoint, delegateAuthProvider);
@@ -70,6 +71,11 @@ namespace WebApiGraphBigBrain.Services
             });
 
             return delegateAuthProvider;
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
         }
     }
 }
