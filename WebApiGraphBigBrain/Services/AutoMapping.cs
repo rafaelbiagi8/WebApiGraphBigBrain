@@ -7,8 +7,7 @@ namespace WebApiGraphBigBrain.Services
     {
         public AutoMapping()
         {
-            CreateMap<User, Microsoft.Graph.User>();
-            CreateMap<Microsoft.Graph.User, User>();
+            CreateMap<User, Microsoft.Graph.User>().ReverseMap();
         }
 
     }

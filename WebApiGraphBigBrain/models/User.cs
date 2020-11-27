@@ -21,6 +21,6 @@ namespace WebApiGraphBigBrain.models
     public class Users
     {
         public int totalResults { get; set; }
-        public List<User> resources { get; set; }
+        public List<User> resources { get; set; } = new List<User>();
     }
 }

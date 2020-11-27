@@ -2,8 +2,10 @@
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Newtonsoft.Json;
 using WebApiGraphBigBrain.Interfaces;
 using WebApiGraphBigBrain.models;
 
@@ -11,57 +13,31 @@ namespace WebApiGraphBigBrain.Services
 {
     public class GraphService : IGraphService
     {
-        private static GraphServiceClient graphClient;
-        private static IConfiguration configuration;
+        private GraphServiceClient _graphClient;
+        private AzureAD Options { get; set; }
 
-        private static string appId;
-        private static string secret;
-        private static string tenantId;
-        private static string instance;
-        private static string resource;
-        private static string endPoint;
-        private static string authority;
-
-        static GraphService()
+        public GraphService(IConfiguration configuration)
         {
-            configuration = new ConfigurationBuilder()
-                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
-                .AddEnvironmentVariables()
-                .Build();
-            SetADOptions();
-        }
-
-        private static void SetADOptions()
-        {
-            var adOptions = new AzureAD();
-            configuration.Bind("AzureAD", adOptions);
-
-            appId = adOptions.AppId;
-            secret = adOptions.Secret;
-            tenantId = adOptions.TenantId;
-            instance = adOptions.Instance;
-            resource = adOptions.GraphResource;
-            endPoint = $"{adOptions.GraphResource}{adOptions.GraphResourceEndPoint}";
-            authority = $"{instance}{tenantId}";
+            Options = new AzureAD();
+            new ConfigureFromConfigurationOptions<AzureAD>(configuration.GetSection("AzureAD"))
+                .Configure(Options);
         }
 
         public async Task<IGraphServiceClient> GetGraphServiceClient()
         {
             var delegateAuthProvider = await GetAuthProvider();
-            graphClient = new GraphServiceClient(endPoint, delegateAuthProvider);
+            _graphClient = new GraphServiceClient($"{Options.GraphResource}{Options.GraphResourceEndPoint}", delegateAuthProvider);
 
-            return graphClient;
+            return _graphClient;
         }
 
 
-        private static async Task<IAuthenticationProvider> GetAuthProvider()
+        private async Task<IAuthenticationProvider> GetAuthProvider()
         {
-            AuthenticationContext authenticationContext = new AuthenticationContext(authority);
-            ClientCredential clientCredencial = new ClientCredential(appId, secret);
+            AuthenticationContext authenticationContext = new AuthenticationContext($"{Options.Instance}{Options.TenantId}");
+            ClientCredential clientCredencial = new ClientCredential(Options.AppId, Options.Secret);
 
-            AuthenticationResult authenticationResult = await authenticationContext.AcquireTokenAsync(resource, clientCredencial);
+            AuthenticationResult authenticationResult = await authenticationContext.AcquireTokenAsync(Options.GraphResource, clientCredencial);
             var token = authenticationResult.AccessToken;
 
             var delegateAuthProvider = new DelegateAuthenticationProvider((requestMessage) =>
