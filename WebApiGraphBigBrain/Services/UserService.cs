@@ -57,17 +57,14 @@ namespace WebApiGraphBigBrain.Services
 
             Users users = new Users();
 
-            foreach(var user in userList)
-            {
-                users.
-            }
-
+            users.resources.AddRange(_mapper.Map<List<models.User>>(userList));
+            
             return JsonConvert.SerializeObject(userList, Formatting.Indented);
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }

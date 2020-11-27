@@ -59,7 +59,7 @@ namespace WebApiGraphBigBrain.Controlers
         {
             try
             {
-                return Ok(new Users { resources = _mapper.Map<List<User>>(await _userService.GetUserMap()) });
+                return Ok(await _userService.GetUserMap());
             }
             catch (ServiceException ex)
             {

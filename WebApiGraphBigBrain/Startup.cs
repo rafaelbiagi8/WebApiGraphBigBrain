@@ -35,6 +35,8 @@ namespace WebApiGraphBigBrain
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
             services.AddTransient<IGraphService, GraphService>();
+            services.AddTransient<IUserService, UserService>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
